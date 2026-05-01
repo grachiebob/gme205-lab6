@@ -1,0 +1,58 @@
+{
+    "origin": {
+        "name": "Dorm A",
+        "coordinates": [
+            14.6042,
+            120.9822
+        ]
+    },
+    "destination": {
+        "name": "Recto Health Center",
+        "coordinates": [
+            14.6028,
+            120.981
+        ]
+    },
+    "distance_km": 0.37,
+    "travel_time": 0.05,
+    "accessibility": "High",
+    "total_roads": 6,
+    "roads": [
+        {
+            "start_node": "Node 13523537711",
+            "end_node": "Node 3739170432",
+            "length_km": 0.05,
+            "speed_kph": 40
+        },
+        {
+            "start_node": "Node 3739170432",
+            "end_node": "Node 3739170433",
+            "length_km": 0.01,
+            "speed_kph": 40
+        },
+        {
+            "start_node": "Node 3739170433",
+            "end_node": "Node 1630895445",
+            "length_km": 0.14,
+            "speed_kph": 40
+        },
+        {
+            "start_node": "Node 1630895445",
+            "end_node": "Node 7477909101",
+            "length_km": 0.01,
+            "speed_kph": 40
+        },
+        {
+            "start_node": "Node 7477909101",
+            "end_node": "Node 393563579",
+            "length_km": 0.05,
+            "speed_kph": 40
+        },
+        {
+            "start_node": "Node 393563579",
+            "end_node": "Node 13523537712",
+            "length_km": 0.11,
+            "speed_kph": 40
+        }
+    ]
+}

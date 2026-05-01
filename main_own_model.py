@@ -5,10 +5,12 @@ from own_model.road import Road
 from own_model.route import Route
 from own_model.transport_network import TransportNetwork
 from own_model.accessibility_result import AccessibilityResult
+from own_model.node import build_spatial_nodes
 
 import folium #for interactive maps
 import osmnx as ox #for OSM data and graph operations
 import networkx as nx #for graph algorithms
+import json
 from shapely.geometry import Point
 
 
@@ -65,7 +67,7 @@ def add_node_on_edge(G, lat, lon, name):
 # Step 4: Add nodes
 # -------------------------
 origin = add_node_on_edge(G, *dorm1.geometry, dorm1.name)
-dest = add_node_on_edge(G, *hospital1.geometry, hospital1.name)
+dest = add_node_on_edge(G, *clinic1.geometry, clinic1.name)
 
 
 # -------------------------
@@ -77,50 +79,7 @@ path = nx.shortest_path(G, origin, dest, weight="length")
 # -------------------------
 # Step 6: Create Spatial Nodes
 # -------------------------
-class NamedNode(SpatialObject):
-    def __init__(self, geometry, name):
-        super().__init__(geometry, name)
-
-
-nodes = []
-edges = []
-
-for i in range(len(path) - 1):
-    u = path[i]
-    v = path[i + 1]
-
-    """
-    convert projected to lat and lon coordinates
-    """
-    lon_u, lat_u = ox.projection.project_geometry(
-        Point(G.nodes[u]["x"], G.nodes[u]["y"]),
-        crs=G.graph["crs"],
-        to_crs="EPSG:4326"
-    )[0].xy
-
-    lon_v, lat_v = ox.projection.project_geometry(
-        Point(G.nodes[v]["x"], G.nodes[v]["y"]),
-        crs=G.graph["crs"],
-        to_crs="EPSG:4326"
-    )[0].xy
-
-    u_node = NamedNode((lat_u[0], lon_u[0]), f"Node {u}")
-    v_node = NamedNode((lat_v[0], lon_v[0]), f"Node {v}")
-
-    nodes.extend([u_node, v_node])
-
-    length_km = ((lat_v[0] - lat_u[0])**2 + (lon_v[0] - lon_u[0])**2)**0.5 * 111   #conversion to km
-
-    road = Road(
-        geometry=u_node.geometry,
-        roadType="Street",
-        length=length_km,
-        travelSpeed=40,
-        startNode=u_node,
-        endNode=v_node
-    )
-
-    edges.append(road)
+nodes, edges = build_spatial_nodes(G, path)
 
 
 # -------------------------
@@ -146,7 +105,6 @@ route = Route(
     network
 )
 
-
 # -------------------------
 # Step 9: OUTPUT
 # -------------------------
@@ -161,7 +119,41 @@ print("============================")
 
 
 # -------------------------
-# Step 10: Map Visualization (consulted GPT for using folium)
+# Step 10: Save JSON Summary
+# -------------------------
+summary = {
+    "origin": {
+        "name": dorm1.name,
+        "coordinates": dorm1.geometry
+    },
+    "destination": {
+        "name": clinic1.name,
+        "coordinates": clinic1.geometry
+    },
+    "distance_km": round(route.distance, 2),
+    "travel_time": round(route.travelTime, 2),
+    "accessibility": level,
+    "total_roads": len(route.path_roads),
+
+    "roads": [
+        {
+            "start_node": road.startNode.name,
+            "end_node": road.endNode.name,
+            "length_km": round(road.length, 2),
+            "speed_kph": road.travelSpeed
+        }
+        for road in route.path_roads
+    ]
+}
+
+with open("route_summary.json", "w") as file:
+    json.dump(summary, file, indent=4)
+
+print("JSON saved as route_summary.json")
+
+
+# -------------------------
+# Step 11: Map Visualization (consulted GPT for using folium)
 # -------------------------
 m = folium.Map(location=dorm1.geometry, zoom_start=16)
 
